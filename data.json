@@ -1,0 +1,21 @@
+{
+    "customers": [
+        {
+            "customerNumber": 1,
+            "firstName": "John",
+            "lastName": "Doe",
+            "addresses": [
+                {
+                    "addressId": 1,
+                    "addressType": "Home",
+                    "addressLine1": "123 Main St",
+                    "addressLine2": "",
+                    "city": "New York",
+                    "state": "NY",
+                    "zip": "10001",
+                    "country": "USA"
+                }
+            ]
+        }
+    ]
+}
