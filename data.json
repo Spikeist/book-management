@@ -1,21 +1,36 @@
-{
-    "customers": [
-        {
-            "customerNumber": 1,
-            "firstName": "John",
-            "lastName": "Doe",
-            "addresses": [
-                {
-                    "addressId": 1,
-                    "addressType": "Home",
-                    "addressLine1": "123 Main St",
-                    "addressLine2": "",
-                    "city": "New York",
-                    "state": "NY",
-                    "zip": "10001",
-                    "country": "USA"
-                }
-            ]
-        }
+[
+  {
+    "CustomerNumber": 1,
+    "FirstName": "John",
+    "LastName": "Doe",
+    "Addresses": [
+      {
+        "AddressId": 1,
+        "AddressType": "Home",
+        "AddressLine1": "123 Main St",
+        "AddressLine2": "",
+        "City": "New York",
+        "State": "NY",
+        "ZIP": "10001",
+        "Country": "USA"
+      }
     ]
-}
+  },
+  {
+    "CustomerNumber": 2,
+    "FirstName": "Jill",
+    "LastName": "Doe",
+    "Addresses": [
+      {
+        "AddressId": 1,
+        "AddressType": "Home",
+        "AddressLine1": "123 Main St",
+        "AddressLine2": "",
+        "City": "New York",
+        "State": "NY",
+        "ZIP": "10001",
+        "Country": "USA"
+      }
+    ]
+  }
+]

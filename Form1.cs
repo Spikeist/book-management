@@ -4,25 +4,27 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Newtonsoft.Json;
+using System.ComponentModel;
 
 namespace Book_Management
 {
     public partial class Form1 : Form
     {
         private string jsonFilePath = "data.json";
-        private List<Customer> customers;
+        private SortableBindingList<Customer> customers;
         private DataGridView customerGrid;
         private DataGridView addressGrid;
-        private ComboBox sortOrderComboBox;
-        
-        #nullable disable
+
+#nullable disable
         public Form1()
         {
             InitializeComponent();
+            customerGrid = new DataGridView();
+            addressGrid = new DataGridView();
             SetupForm();
             LoadCustomers();
         }
-        #nullable enable
+#nullable enable
 
         private void SetupForm()
         {
@@ -30,21 +32,23 @@ namespace Book_Management
             this.Text = "Address Book";
             this.Size = new System.Drawing.Size(800, 600);
 
-            #nullable disable
             // Set up the customer grid
             customerGrid = new DataGridView();
             customerGrid.Location = new System.Drawing.Point(20, 20);
             customerGrid.Size = new System.Drawing.Size(400, 200);
             customerGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             customerGrid.MultiSelect = false;
-            customerGrid.ReadOnly = true;
-            customerGrid.ColumnCount = 3;
-            customerGrid.Columns[0].Name = "CustomerNumber";
-            customerGrid.Columns[1].Name = "FirstName";
-            customerGrid.Columns[2].Name = "LastName";
-            customerGrid.SelectionChanged += CustomerGrid_SelectionChanged;
+            customerGrid.ReadOnly = false;
+            customerGrid.AllowUserToDeleteRows = true;
+            customerGrid.AllowUserToAddRows = false;
+            customerGrid.AutoGenerateColumns = true;
+            customerGrid.AllowUserToOrderColumns = true;
+            customerGrid.SelectionChanged += CustomerGrid_SelectionChanged!;
+            customerGrid.CellValueChanged += CustomerGrid_CellValueChanged!;
+            customerGrid.UserDeletingRow += CustomerGrid_UserDeletingRow!;
+            customerGrid.ColumnHeaderMouseClick += CustomerGrid_ColumnHeaderMouseClick!;
+            customerGrid.CellValidating += CustomerGrid_CellValidating!;
             this.Controls.Add(customerGrid);
-            #nullable enable
 
             // Set up the address grid
             addressGrid = new DataGridView();
@@ -52,91 +56,69 @@ namespace Book_Management
             addressGrid.Size = new System.Drawing.Size(600, 200);
             addressGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             addressGrid.MultiSelect = false;
-            addressGrid.ReadOnly = true;
-            addressGrid.ColumnCount = 8;
-            addressGrid.Columns[0].Name = "AddressId";
-            addressGrid.Columns[1].Name = "AddressType";
-            addressGrid.Columns[2].Name = "AddressLine1";
-            addressGrid.Columns[3].Name = "AddressLine2";
-            addressGrid.Columns[4].Name = "City";
-            addressGrid.Columns[5].Name = "State";
-            addressGrid.Columns[6].Name = "ZIP";
-            addressGrid.Columns[7].Name = "Country";
+            addressGrid.ReadOnly = false;
+            addressGrid.AllowUserToDeleteRows = true;
+            addressGrid.AutoGenerateColumns = true;
+            addressGrid.AllowUserToOrderColumns = true;
+            addressGrid.AllowUserToAddRows = false;
+            addressGrid.CellValueChanged += AddressGrid_CellValueChanged!;
+            addressGrid.UserDeletingRow += AddressGrid_UserDeletingRow!;
+            addressGrid.ColumnHeaderMouseClick += AddressGrid_ColumnHeaderMouseClick!;
+            addressGrid.RowValidating += AddressGrid_RowValidating!;
             this.Controls.Add(addressGrid);
 
-            // Set up the sort order combo box
-            sortOrderComboBox = new ComboBox();
-            sortOrderComboBox.Location = new System.Drawing.Point(440, 20);
-            sortOrderComboBox.Size = new System.Drawing.Size(200, 20);
-            sortOrderComboBox.Items.Add("CustomerNumber");
-            sortOrderComboBox.Items.Add("FirstName");
-            sortOrderComboBox.Items.Add("LastName");
-            sortOrderComboBox.SelectedIndex = 0;
-            sortOrderComboBox.SelectedIndexChanged += SortOrderComboBox_SelectedIndexChanged;
-            this.Controls.Add(sortOrderComboBox);
-
-            #nullable disable
             // Set up the buttons
             Button addCustomerButton = new Button();
             addCustomerButton.Text = "Add Customer";
             addCustomerButton.Location = new System.Drawing.Point(440, 60);
             addCustomerButton.Size = new System.Drawing.Size(100, 30);
-            addCustomerButton.Click += AddCustomerButton_Click;
+            addCustomerButton.Click += AddCustomerButton_Click!;
             this.Controls.Add(addCustomerButton);
-
-            Button updateCustomerButton = new Button();
-            updateCustomerButton.Text = "Update Customer";
-            updateCustomerButton.Location = new System.Drawing.Point(560, 60);
-            updateCustomerButton.Size = new System.Drawing.Size(100, 30);
-            updateCustomerButton.Click += UpdateCustomerButton_Click;
-            this.Controls.Add(updateCustomerButton);
 
             Button deleteCustomerButton = new Button();
             deleteCustomerButton.Text = "Delete Customer";
-            deleteCustomerButton.Location = new System.Drawing.Point(680, 60);
+            deleteCustomerButton.Location = new System.Drawing.Point(560, 60);
             deleteCustomerButton.Size = new System.Drawing.Size(100, 30);
-            deleteCustomerButton.Click += DeleteCustomerButton_Click;
+            deleteCustomerButton.Click += DeleteCustomerButton_Click!;
             this.Controls.Add(deleteCustomerButton);
 
             Button addAddressButton = new Button();
             addAddressButton.Text = "Add Address";
             addAddressButton.Location = new System.Drawing.Point(440, 100);
             addAddressButton.Size = new System.Drawing.Size(100, 30);
-            addAddressButton.Click += AddAddressButton_Click;
+            addAddressButton.Click += AddAddressButton_Click!;
             this.Controls.Add(addAddressButton);
-
-            Button updateAddressButton = new Button();
-            updateAddressButton.Text = "Update Address";
-            updateAddressButton.Location = new System.Drawing.Point(560, 100);
-            updateAddressButton.Size = new System.Drawing.Size(100, 30);
-            updateAddressButton.Click += UpdateAddressButton_Click;
-            this.Controls.Add(updateAddressButton);
 
             Button deleteAddressButton = new Button();
             deleteAddressButton.Text = "Delete Address";
-            deleteAddressButton.Location = new System.Drawing.Point(680, 100);
+            deleteAddressButton.Location = new System.Drawing.Point(560, 100);
             deleteAddressButton.Size = new System.Drawing.Size(100, 30);
-            deleteAddressButton.Click += DeleteAddressButton_Click;
+            deleteAddressButton.Click += DeleteAddressButton_Click!;
             this.Controls.Add(deleteAddressButton);
-            #nullable enable
         }
 
-        #nullable disable
         private void LoadCustomers()
         {
             if (File.Exists(jsonFilePath))
             {
-                string json = File.ReadAllText(jsonFilePath);
-                customers = JsonConvert.DeserializeObject<List<Customer>>(json);
+                try
+                {
+                    string json = File.ReadAllText(jsonFilePath);
+                    customers = new SortableBindingList<Customer>(JsonConvert.DeserializeObject<List<Customer>>(json) ?? new List<Customer>());
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error loading customers: {ex.Message}");
+                    customers = new SortableBindingList<Customer>();
+                }
             }
             else
             {
-                customers = new List<Customer>();
+                customers = new SortableBindingList<Customer>();
             }
 
             customerGrid.DataSource = customers;
         }
-        #nullable enable
 
         private void SaveCustomers()
         {
@@ -144,7 +126,7 @@ namespace Book_Management
             File.WriteAllText(jsonFilePath, json);
         }
 
-        #nullable disable
+#nullable disable
         private void LoadAddresses(int customerNumber)
         {
             Customer selectedCustomer = customers.FirstOrDefault(c => c.CustomerNumber == customerNumber);
@@ -157,21 +139,7 @@ namespace Book_Management
                 addressGrid.DataSource = null;
             }
         }
-        
-        private void UpdateCustomer(int customerNumber)
-        {
-            Customer selectedCustomer = customers.FirstOrDefault(c => c.CustomerNumber == customerNumber);
-            if (selectedCustomer != null)
-            {
-                // Update the customer properties
-                selectedCustomer.FirstName = "Updated First Name";
-                selectedCustomer.LastName = "Updated Last Name";
 
-                SaveCustomers();
-                LoadCustomers();
-            }
-        }
-        
         private void DeleteCustomer(int customerNumber)
         {
             Customer selectedCustomer = customers.FirstOrDefault(c => c.CustomerNumber == customerNumber);
@@ -182,7 +150,7 @@ namespace Book_Management
                 LoadCustomers();
             }
         }
-        #nullable enable
+#nullable enable
 
         private void AddCustomer()
         {
@@ -191,7 +159,7 @@ namespace Book_Management
                 CustomerNumber = customers.Any() ? customers.Max(c => c.CustomerNumber) + 1 : 1,
                 FirstName = "New",
                 LastName = "Customer",
-                Addresses = new List<Address>()
+                Addresses = new SortableBindingList<Address>()
             };
 
             customers.Add(newCustomer);
@@ -199,29 +167,7 @@ namespace Book_Management
             LoadCustomers();
         }
 
-        #nullable disable
-        private void UpdateAddress(int customerNumber, int addressId)
-        {
-            Customer selectedCustomer = customers.FirstOrDefault(c => c.CustomerNumber == customerNumber);
-            if (selectedCustomer != null)
-            {
-                Address selectedAddress = selectedCustomer.Addresses.FirstOrDefault(a => a.AddressId == addressId);
-                if (selectedAddress != null)
-                {
-                    // Update the address properties
-                    selectedAddress.AddressLine1 = "Updated Address Line 1";
-                    selectedAddress.AddressLine2 = "Updated Address Line 2";
-                    selectedAddress.City = "Updated City";
-                    selectedAddress.State = "Updated State";
-                    selectedAddress.ZIP = "Updated ZIP";
-                    selectedAddress.Country = "Updated Country";
-
-                    SaveCustomers();
-                    LoadAddresses(customerNumber);
-                }
-            }
-        }
-
+#nullable disable
         private void DeleteAddress(int customerNumber, int addressId)
         {
             Customer selectedCustomer = customers.FirstOrDefault(c => c.CustomerNumber == customerNumber);
@@ -236,17 +182,17 @@ namespace Book_Management
                 }
             }
         }
-        
 
         private void AddAddress(int customerNumber)
         {
             Customer selectedCustomer = customers.FirstOrDefault(c => c.CustomerNumber == customerNumber);
             if (selectedCustomer != null)
             {
+                int nextAddressTypeNumber = selectedCustomer.Addresses.Count + 1;
                 var newAddress = new Address
                 {
                     AddressId = selectedCustomer.Addresses.Any() ? selectedCustomer.Addresses.Max(a => a.AddressId) + 1 : 1,
-                    AddressType = "Home",
+                    AddressType = $"Address {nextAddressTypeNumber}",
                     AddressLine1 = "New Address Line 1",
                     AddressLine2 = "New Address Line 2",
                     City = "New City",
@@ -260,7 +206,7 @@ namespace Book_Management
                 LoadAddresses(customerNumber);
             }
         }
-        #nullable enable
+#nullable enable
 
         private void CustomerGrid_SelectionChanged(object sender, EventArgs e)
         {
@@ -271,43 +217,126 @@ namespace Book_Management
             }
         }
 
-        #nullable disable
-        private void SortOrderComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        private void CustomerGrid_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
-            string sortOrder = sortOrderComboBox.SelectedItem.ToString();
-            switch (sortOrder)
+            if (e.RowIndex >= 0)
             {
-                case "CustomerNumber":
-                    customers = customers.OrderBy(c => c.CustomerNumber).ToList();
-                    break;
-                case "FirstName":
-                    customers = customers.OrderBy(c => c.FirstName).ToList();
-                    break;
-                case "LastName":
-                    customers = customers.OrderBy(c => c.LastName).ToList();
-                    break;
+                Customer customer = (Customer)customerGrid.Rows[e.RowIndex].DataBoundItem;
+                SaveCustomers();
             }
-            customerGrid.DataSource = null;
-            customerGrid.DataSource = customers;
         }
-        #nullable enable
+
+#nullable disable
+        private void CustomerGrid_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
+        {
+            Customer customer = (Customer)e.Row.DataBoundItem;
+            customer.Addresses.Clear();
+            customers.Remove(customer);
+            SaveCustomers();
+        }
+#nullable enable
+
+        private void CustomerGrid_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            DataGridViewColumn column = customerGrid.Columns[e.ColumnIndex];
+            SortCustomers(column.Name);
+        }
+
+        private Dictionary<string, ListSortDirection> customerSortOrders = new Dictionary<string, ListSortDirection>();
+
+        private void SortCustomers(string columnName)
+        {
+            if (!customerSortOrders.ContainsKey(columnName))
+            {
+                customerSortOrders[columnName] = ListSortDirection.Ascending;
+            }
+            else
+            {
+                customerSortOrders[columnName] = customerSortOrders[columnName] == ListSortDirection.Ascending ? ListSortDirection.Descending : ListSortDirection.Ascending;
+            }
+
+            customerGrid.Sort(customerGrid.Columns[columnName], customerSortOrders[columnName]);
+        }
+
+#nullable disable
+        private void CustomerGrid_CellValidating(object sender, DataGridViewCellValidatingEventArgs e)
+        {
+            if (customerGrid.Columns[e.ColumnIndex].Name == "CustomerNumber")
+            {
+                if (!int.TryParse(e.FormattedValue.ToString(), out _))
+                {
+                    e.Cancel = true;
+                    MessageBox.Show("Customer number must be numeric.");
+                }
+            }
+        }
+#nullable enable
+
+        private void AddressGrid_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0)
+            {
+                Address address = (Address)addressGrid.Rows[e.RowIndex].DataBoundItem;
+                SaveCustomers();
+            }
+        }
+
+#nullable disable
+        private void AddressGrid_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
+        {
+            Address address = (Address)e.Row.DataBoundItem;
+            Customer customer = (Customer)customerGrid.SelectedRows[0].DataBoundItem;
+            customer.Addresses.Remove(address);
+            SaveCustomers();
+        }
+#nullable enable
+
+        private void AddressGrid_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            DataGridViewColumn column = addressGrid.Columns[e.ColumnIndex];
+            SortAddresses(column.Name);
+        }
+
+        private Dictionary<string, ListSortDirection> addressSortOrders = new Dictionary<string, ListSortDirection>();
+
+        private void SortAddresses(string columnName)
+        {
+            if (!addressSortOrders.ContainsKey(columnName))
+            {
+                addressSortOrders[columnName] = ListSortDirection.Ascending;
+            }
+            else
+            {
+                addressSortOrders[columnName] = addressSortOrders[columnName] == ListSortDirection.Ascending ? ListSortDirection.Descending : ListSortDirection.Ascending;
+            }
+
+            addressGrid.Sort(addressGrid.Columns[columnName], addressSortOrders[columnName]);
+        }
+
+#nullable disable
+        private void AddressGrid_RowValidating(object sender, DataGridViewCellCancelEventArgs e)
+        {
+            if (e.RowIndex >= 0 && !addressGrid.Rows[e.RowIndex].IsNewRow)
+            {
+                DataGridViewRow row = addressGrid.Rows[e.RowIndex];
+                string addressType = row.Cells["AddressType"].Value?.ToString();
+
+                if (!string.IsNullOrEmpty(addressType))
+                {
+                    var customer = (Customer)customerGrid.SelectedRows[0].DataBoundItem;
+                    if (customer.Addresses.Count(a => a.AddressType == addressType) > 1)
+                    {
+                        e.Cancel = true;
+                        MessageBox.Show($"A customer can only have one address of type '{addressType}'.");
+                    }
+                }
+            }
+        }
+#nullable enable
 
         private void AddCustomerButton_Click(object sender, EventArgs e)
         {
             AddCustomer();
-        }
-
-        private void UpdateCustomerButton_Click(object sender, EventArgs e)
-        {
-            if (customerGrid.SelectedRows.Count > 0)
-            {
-                int customerNumber = Convert.ToInt32(customerGrid.SelectedRows[0].Cells["CustomerNumber"].Value);
-                UpdateCustomer(customerNumber);
-            }
-            else
-            {
-                MessageBox.Show("Please select a customer to update.");
-            }
         }
 
         private void DeleteCustomerButton_Click(object sender, EventArgs e)
@@ -336,20 +365,6 @@ namespace Book_Management
             }
         }
 
-        private void UpdateAddressButton_Click(object sender, EventArgs e)
-        {
-            if (customerGrid.SelectedRows.Count > 0 && addressGrid.SelectedRows.Count > 0)
-            {
-                int customerNumber = Convert.ToInt32(customerGrid.SelectedRows[0].Cells["CustomerNumber"].Value);
-                int addressId = Convert.ToInt32(addressGrid.SelectedRows[0].Cells["AddressId"].Value);
-                UpdateAddress(customerNumber, addressId);
-            }
-            else
-            {
-                MessageBox.Show("Please select a customer and an address to update.");
-            }
-        }
-
         private void DeleteAddressButton_Click(object sender, EventArgs e)
         {
             if (customerGrid.SelectedRows.Count > 0 && addressGrid.SelectedRows.Count > 0)
@@ -365,23 +380,111 @@ namespace Book_Management
         }
     }
 
+    public class CustomerData
+    {
+        public List<Customer>? Customers { get; set; }
+    }
+
     public class Customer
     {
         public int CustomerNumber { get; set; }
-        public string? FirstName { get; set; }
-        public string? LastName { get; set; }
-        public List<Address> Addresses { get; set; } = new List<Address>();
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public SortableBindingList<Address> Addresses { get; set; } = new SortableBindingList<Address>();
     }
 
     public class Address
     {
         public int AddressId { get; set; }
-        public string? AddressType { get; set; }
-        public string? AddressLine1 { get; set; }
-        public string? AddressLine2 { get; set; }
-        public string? City { get; set; }
-        public string? State { get; set; }
-        public string? ZIP { get; set; }
-        public string? Country { get; set; }
+        public string AddressType { get; set; } = string.Empty;
+        public string AddressLine1 { get; set; } = string.Empty;
+        public string? AddressLine2 { get; set; } = string.Empty;
+        public string City { get; set; } = string.Empty;
+        public string State { get; set; } = string.Empty;
+        public string ZIP { get; set; } = string.Empty;
+        public string Country { get; set; } = string.Empty;
+    }
+
+    public class SortableBindingList<T> : BindingList<T>
+    {
+        public SortableBindingList()
+        {
+        }
+
+        public SortableBindingList(IList<T> list)
+        {
+            foreach (var item in list)
+            {
+                Add(item);
+            }
+        }
+
+        protected override bool SupportsSortingCore => true;
+
+        protected override bool IsSortedCore => true;
+
+#nullable disable
+        protected override void ApplySortCore(PropertyDescriptor prop, ListSortDirection direction)
+        {
+            if (prop.PropertyType.GetInterface("IComparable") != null)
+            {
+                List<T> itemsList = Items as List<T>;
+                itemsList.Sort((x, y) =>
+                {
+                    object xValue = prop.GetValue(x);
+                    object yValue = prop.GetValue(y);
+
+                    int result = ((IComparable)xValue).CompareTo(yValue);
+
+                    if (direction == ListSortDirection.Descending)
+                        result = -result;
+
+                    return result;
+                });
+            }
+            else
+            {
+                throw new NotSupportedException($"Cannot sort by {prop.Name}. The property type does not implement IComparable.");
+            }
+        }
+#nullable enable
     }
 }
+
+
+// [
+//   {
+//     "customerNumber": 1,
+//     "firstName": "John",
+//     "lastName": "Doe",
+//     "addresses": [
+//       {
+//         "addressId": 1,
+//         "addressType": "Home",
+//         "addressLine1": "123 Main St",
+//         "addressLine2": "",
+//         "city": "New York",
+//         "state": "NY",
+//         "zip": "10001",
+//         "country": "USA"
+//       }
+//     ]
+//   },
+//   {
+//     "customerNumber": 2,
+//     "firstName": "Jill",
+//     "lastName": "Doe",
+//     "addresses": [
+//       {
+//         "addressId": 1,
+//         "addressType": "Home",
+//         "addressLine1": "123 Main St",
+//         "addressLine2": "",
+//         "city": "New York",
+//         "state": "NY",
+//         "zip": "10001",
+//         "country": "USA"
+//       }
+//     ]
+//   }
+// ]
