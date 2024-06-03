@@ -180,5 +180,21 @@ namespace Book_Management
             DialogResult = DialogResult.OK;
             Close();
         }
+
+        public void UpdateAddressTypeComboBox(List<string> existingAddressTypes)
+        {
+            addressTypeComboBox.Items.Clear();
+            addressTypeComboBox.Items.AddRange(new string[] { "Home", "Business", "Billing", "Shipping" });
+
+            foreach (string addressType in existingAddressTypes)
+            {
+                addressTypeComboBox.Items.Remove(addressType);
+            }
+
+            if (addressTypeComboBox.Items.Count > 0)
+            {
+                addressTypeComboBox.SelectedIndex = 0;
+            }
+        }
     }
 }

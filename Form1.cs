@@ -106,6 +106,7 @@ namespace Book_Management
             addressGrid.UserDeletingRow += AddressGrid_UserDeletingRow;
             addressGrid.ColumnHeaderMouseClick += AddressGrid_ColumnHeaderMouseClick;
             addressGrid.RowValidating += AddressGrid_RowValidating;
+            addressGrid.CellBeginEdit += AddressGrid_CellBeginEdit;
 
             this.Controls.Add(addressGrid);
 
@@ -175,6 +176,22 @@ namespace Book_Management
             Customer selectedCustomer = customers.FirstOrDefault(c => c.CustomerNumber == customerNumber);
             if (selectedCustomer != null)
             {
+                addressGrid.DataSource = null;
+
+                DataGridViewComboBoxColumn addressTypeColumn = (DataGridViewComboBoxColumn)addressGrid.Columns["AddressType"];
+                List<string> availableAddressTypes = new List<string> { "Home", "Business", "Billing", "Shipping" };
+
+                addressTypeColumn.DataSource = availableAddressTypes;
+
+                foreach (DataGridViewRow row in addressGrid.Rows)
+                {
+                    Address address = (Address)row.DataBoundItem;
+                    if (address != null && !availableAddressTypes.Contains(address.AddressType))
+                    {
+                        availableAddressTypes.Add(address.AddressType);
+                    }
+                }
+
                 addressGrid.DataSource = selectedCustomer.Addresses;
             }
             else
@@ -239,21 +256,24 @@ namespace Book_Management
                 }
 
                 AddAddressForm addAddressForm = new AddAddressForm();
+                List<string> existingAddressTypes = selectedCustomer.Addresses.Select(a => a.AddressType).ToList();
+                addAddressForm.UpdateAddressTypeComboBox(existingAddressTypes);
+
                 while (true)
                 {
                     if (addAddressForm.ShowDialog() == DialogResult.OK)
                     {
                         string selectedAddressType = addAddressForm.AddressType;
-                        if (selectedCustomer.Addresses.Any(a => a.AddressType == selectedAddressType))
+                        if (string.IsNullOrEmpty(selectedAddressType))
                         {
-                            MessageBox.Show($"The customer already has an address of type '{selectedAddressType}'.");
+                            MessageBox.Show("Please select a valid address type.");
                             continue;
                         }
 
                         var newAddress = new Address
                         {
                             AddressId = selectedCustomer.Addresses.Any() ? selectedCustomer.Addresses.Max(a => a.AddressId) + 1 : 1,
-                            AddressType = addAddressForm.AddressType,
+                            AddressType = selectedAddressType,
                             AddressLine1 = addAddressForm.AddressLine1,
                             AddressLine2 = addAddressForm.AddressLine2,
                             City = addAddressForm.City,
@@ -410,6 +430,36 @@ namespace Book_Management
             }
         }
 #nullable enable
+        private void AddressGrid_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
+        {
+            if (e.ColumnIndex == addressGrid.Columns["AddressType"].Index)
+            {
+                Customer customer = (Customer)customerGrid.SelectedRows[0].DataBoundItem;
+                DataGridViewComboBoxCell comboBoxCell = (DataGridViewComboBoxCell)addressGrid.Rows[e.RowIndex].Cells["AddressType"];
+                Address currentAddress = (Address)addressGrid.Rows[e.RowIndex].DataBoundItem;
+
+                List<string> availableAddressTypes = new List<string> { "Home", "Business", "Billing", "Shipping" };
+                List<string> takenAddressTypes = customer.Addresses
+                    .Where(a => a != currentAddress)
+                    .Select(a => a.AddressType)
+                    .ToList();
+
+                string currentAddressType = currentAddress.AddressType;
+                if (!availableAddressTypes.Contains(currentAddressType))
+                {
+                    availableAddressTypes.Add(currentAddressType);
+                }
+
+                comboBoxCell.DataSource = availableAddressTypes.Except(takenAddressTypes).ToList();
+
+                if (!comboBoxCell.Items.Contains(currentAddressType))
+                {
+                    comboBoxCell.Items.Add(currentAddressType);
+                }
+
+                comboBoxCell.Value = currentAddressType;
+            }
+        }
 
         private void AddCustomerButton_Click(object sender, EventArgs e)
         {
