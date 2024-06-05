@@ -144,7 +144,7 @@ namespace Book_Management
 
         private void AddressGrid_CurrentCellDirtyStateChanged(object sender, EventArgs e)
         {
-            if (addressGrid.IsCurrentCellDirty)
+            if (addressGrid.IsCurrentCellDirty && addressGrid.CurrentCell.ColumnIndex == addressGrid.Columns["AddressType"].Index)
             {
                 addressGrid.CommitEdit(DataGridViewDataErrorContexts.Commit);
             }
@@ -226,6 +226,7 @@ namespace Book_Management
 
                 if (customers.Count == 0)
                 {
+                    addressGrid.DataSource = null;
                 }
             }
         }
@@ -416,12 +417,54 @@ namespace Book_Management
         private void AddressGrid_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
             DataGridViewColumn column = addressGrid.Columns[e.ColumnIndex];
-            SortAddresses(column.Name);
+            if (column.Name == "AddressType")
+            {
+                SortAddressesByAddressType();
+            }
+            else
+            {
+                SortAddresses(column.Name);
+            }
+        }
+
+#nullable disable
+        private void SortAddressesByAddressType()
+        {
+            if (customerGrid.SelectedRows.Count > 0)
+            {
+                int customerNumber = Convert.ToInt32(customerGrid.SelectedRows[0].Cells["CustomerNumber"].Value);
+                Customer selectedCustomer = customers.FirstOrDefault(c => c.CustomerNumber == customerNumber);
+
+                if (selectedCustomer != null)
+                {
+                    if (!addressSortOrders.ContainsKey("AddressType"))
+                    {
+                        addressSortOrders["AddressType"] = ListSortDirection.Ascending;
+                    }
+                    else
+                    {
+                        addressSortOrders["AddressType"] = addressSortOrders["AddressType"] == ListSortDirection.Ascending ? ListSortDirection.Descending : ListSortDirection.Ascending;
+                    }
+
+                    ListSortDirection sortDirection = addressSortOrders["AddressType"];
+
+                    if (sortDirection == ListSortDirection.Ascending)
+                    {
+                        selectedCustomer.Addresses = new SortableBindingList<Address>(selectedCustomer.Addresses.OrderBy(a => a.AddressType).ToList());
+                    }
+                    else
+                    {
+                        selectedCustomer.Addresses = new SortableBindingList<Address>(selectedCustomer.Addresses.OrderByDescending(a => a.AddressType).ToList());
+                    }
+
+                    addressGrid.DataSource = null;
+                    addressGrid.DataSource = selectedCustomer.Addresses;
+                }
+            }
         }
 
         private Dictionary<string, ListSortDirection> addressSortOrders = new Dictionary<string, ListSortDirection>();
 
-#nullable disable
         private void SortAddresses(string columnName)
         {
             if (!addressSortOrders.ContainsKey(columnName))
