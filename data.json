@@ -5,24 +5,24 @@
     "LastName": "Doe",
     "Addresses": [
       {
+        "AddressId": 2,
+        "AddressType": "Business",
+        "AddressLine1": "124 Main St",
+        "AddressLine2": "",
+        "City": "OKC",
+        "State": "OK",
+        "ZIP": "10000",
+        "Country": ""
+      },
+      {
         "AddressId": 1,
-        "AddressType": "Home",
+        "AddressType": "Shipping",
         "AddressLine1": "123 Main St",
-        "AddressLine2": null,
+        "AddressLine2": "",
         "City": "New York",
         "State": "NY",
         "ZIP": "10001",
         "Country": "USA"
-      },
-      {
-        "AddressId": 2,
-        "AddressType": "Billing",
-        "AddressLine1": "",
-        "AddressLine2": "",
-        "City": "",
-        "State": null,
-        "ZIP": "",
-        "Country": ""
       }
     ]
   },

@@ -5,9 +5,9 @@
     "LastName": "Doe",
     "Addresses": [
       {
-        "AddressId": 1,
-        "AddressType": "Home",
-        "AddressLine1": "absss",
+        "AddressId": 2,
+        "AddressType": "Billing",
+        "AddressLine1": "",
         "AddressLine2": "",
         "City": "",
         "State": "",
@@ -15,9 +15,9 @@
         "Country": ""
       },
       {
-        "AddressId": 2,
+        "AddressId": 1,
         "AddressType": "Business",
-        "AddressLine1": "",
+        "AddressLine1": "absss",
         "AddressLine2": "",
         "City": "",
         "State": "",
