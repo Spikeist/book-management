@@ -32,17 +32,15 @@ namespace Book_Management
             customerGrid.Size = new System.Drawing.Size(400, 200);
             customerGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             customerGrid.MultiSelect = false;
-            customerGrid.ReadOnly = false;
-            customerGrid.AllowUserToDeleteRows = true;
+            customerGrid.AllowUserToDeleteRows = false;
             customerGrid.AllowUserToAddRows = false;
             customerGrid.AutoGenerateColumns = true;
+            customerGrid.ReadOnly = true;
             customerGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             customerGrid.AllowUserToOrderColumns = true;
             customerGrid.SelectionChanged += CustomerGrid_SelectionChanged;
-            customerGrid.CellValueChanged += CustomerGrid_CellValueChanged;
             customerGrid.UserDeletingRow += CustomerGrid_UserDeletingRow;
             customerGrid.ColumnHeaderMouseClick += CustomerGrid_ColumnHeaderMouseClick;
-            customerGrid.CellValidating += CustomerGrid_CellValidating;
             customerGrid.DataBindingComplete += CustomerGrid_DataBindingComplete;
             this.Controls.Add(customerGrid);
 
@@ -52,16 +50,17 @@ namespace Book_Management
             addressGrid.Size = new System.Drawing.Size(850, 200);
             addressGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             addressGrid.MultiSelect = false;
-            addressGrid.ReadOnly = false;
-            addressGrid.AllowUserToDeleteRows = true;
+            addressGrid.AllowUserToDeleteRows = false;
             addressGrid.AllowUserToOrderColumns = true;
             addressGrid.AllowUserToAddRows = false;
             addressGrid.AutoGenerateColumns = false;
+            addressGrid.ReadOnly = true;
             addressGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
 
             DataGridViewTextBoxColumn addressIdColumn = new DataGridViewTextBoxColumn();
             addressIdColumn.DataPropertyName = "AddressId";
             addressIdColumn.HeaderText = "AddressId";
+            addressIdColumn.Name = "AddressId";
             addressIdColumn.ReadOnly = true;
             addressGrid.Columns.Add(addressIdColumn);
 
@@ -70,45 +69,47 @@ namespace Book_Management
             addressTypeColumn.HeaderText = "AddressType";
             addressTypeColumn.Name = "AddressType";
             addressTypeColumn.Items.AddRange(new string[] { "Home", "Business", "Billing", "Shipping" });
+            addressTypeColumn.DisplayStyle = DataGridViewComboBoxDisplayStyle.Nothing;
             addressGrid.Columns.Add(addressTypeColumn);
 
             DataGridViewTextBoxColumn addressLine1Column = new DataGridViewTextBoxColumn();
             addressLine1Column.DataPropertyName = "AddressLine1";
             addressLine1Column.HeaderText = "AddressLine1";
+            addressLine1Column.Name = "AddressLine1";
             addressGrid.Columns.Add(addressLine1Column);
 
             DataGridViewTextBoxColumn addressLine2Column = new DataGridViewTextBoxColumn();
             addressLine2Column.DataPropertyName = "AddressLine2";
             addressLine2Column.HeaderText = "AddressLine2";
+            addressLine2Column.Name = "AddressLine2";
             addressGrid.Columns.Add(addressLine2Column);
 
             DataGridViewTextBoxColumn cityColumn = new DataGridViewTextBoxColumn();
             cityColumn.DataPropertyName = "City";
             cityColumn.HeaderText = "City";
+            cityColumn.Name = "City";
             addressGrid.Columns.Add(cityColumn);
 
             DataGridViewTextBoxColumn stateColumn = new DataGridViewTextBoxColumn();
             stateColumn.DataPropertyName = "State";
             stateColumn.HeaderText = "State";
+            stateColumn.Name = "State";
             addressGrid.Columns.Add(stateColumn);
 
             DataGridViewTextBoxColumn zipColumn = new DataGridViewTextBoxColumn();
             zipColumn.DataPropertyName = "ZIP";
             zipColumn.HeaderText = "ZIP";
+            zipColumn.Name = "ZIP";
             addressGrid.Columns.Add(zipColumn);
 
             DataGridViewTextBoxColumn countryColumn = new DataGridViewTextBoxColumn();
             countryColumn.DataPropertyName = "Country";
             countryColumn.HeaderText = "Country";
+            countryColumn.Name = "Country";
             addressGrid.Columns.Add(countryColumn);
 
-            addressGrid.CellValueChanged += AddressGrid_CellValueChanged;
             addressGrid.UserDeletingRow += AddressGrid_UserDeletingRow;
             addressGrid.ColumnHeaderMouseClick += AddressGrid_ColumnHeaderMouseClick;
-            addressGrid.RowValidating += AddressGrid_RowValidating;
-            addressGrid.CellBeginEdit += AddressGrid_CellBeginEdit;
-            addressGrid.CellEndEdit += AddressGrid_CellEndEdit;
-            addressGrid.CurrentCellDirtyStateChanged += AddressGrid_CurrentCellDirtyStateChanged;
 
             this.Controls.Add(addressGrid);
 
@@ -120,9 +121,16 @@ namespace Book_Management
             addCustomerButton.Click += AddCustomerButton_Click;
             this.Controls.Add(addCustomerButton);
 
+            Button editCustomerButton = new Button();
+            editCustomerButton.Text = "Edit Customer";
+            editCustomerButton.Location = new System.Drawing.Point(560, 60);
+            editCustomerButton.Size = new System.Drawing.Size(100, 30);
+            editCustomerButton.Click += EditCustomerButton_Click;
+            this.Controls.Add(editCustomerButton);
+
             Button deleteCustomerButton = new Button();
             deleteCustomerButton.Text = "Delete Customer";
-            deleteCustomerButton.Location = new System.Drawing.Point(560, 60);
+            deleteCustomerButton.Location = new System.Drawing.Point(680, 60);
             deleteCustomerButton.Size = new System.Drawing.Size(120, 30);
             deleteCustomerButton.Click += DeleteCustomerButton_Click;
             this.Controls.Add(deleteCustomerButton);
@@ -134,25 +142,19 @@ namespace Book_Management
             addAddressButton.Click += AddAddressButton_Click;
             this.Controls.Add(addAddressButton);
 
+            Button editAddressButton = new Button();
+            editAddressButton.Text = "Edit Address";
+            editAddressButton.Location = new System.Drawing.Point(560, 100);
+            editAddressButton.Size = new System.Drawing.Size(100, 30);
+            editAddressButton.Click += EditAddressButton_Click;
+            this.Controls.Add(editAddressButton);
+
             Button deleteAddressButton = new Button();
             deleteAddressButton.Text = "Delete Address";
-            deleteAddressButton.Location = new System.Drawing.Point(560, 100);
+            deleteAddressButton.Location = new System.Drawing.Point(680, 100);
             deleteAddressButton.Size = new System.Drawing.Size(120, 30);
             deleteAddressButton.Click += DeleteAddressButton_Click;
             this.Controls.Add(deleteAddressButton);
-        }
-
-        private void AddressGrid_CurrentCellDirtyStateChanged(object sender, EventArgs e)
-        {
-            if (addressGrid.IsCurrentCellDirty && addressGrid.CurrentCell.ColumnIndex == addressGrid.Columns["AddressType"].Index)
-            {
-                addressGrid.CommitEdit(DataGridViewDataErrorContexts.Commit);
-            }
-        }
-
-        private void AddressGrid_CellEndEdit(object sender, DataGridViewCellEventArgs e)
-        {
-            SaveCustomers();
         }
 #nullable enable
 
@@ -326,15 +328,6 @@ namespace Book_Management
             }
         }
 
-        private void CustomerGrid_CellValueChanged(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex >= 0)
-            {
-                Customer customer = (Customer)customerGrid.Rows[e.RowIndex].DataBoundItem;
-                SaveCustomers();
-            }
-        }
-
 #nullable disable
         private void CustomerGrid_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
         {
@@ -367,20 +360,6 @@ namespace Book_Management
             customerGrid.Sort(customerGrid.Columns[columnName], customerSortOrders[columnName]);
         }
 
-#nullable disable
-        private void CustomerGrid_CellValidating(object sender, DataGridViewCellValidatingEventArgs e)
-        {
-            if (customerGrid.Columns[e.ColumnIndex].Name == "CustomerNumber")
-            {
-                if (!int.TryParse(e.FormattedValue.ToString(), out _))
-                {
-                    e.Cancel = true;
-                    MessageBox.Show("Customer number must be numeric.");
-                }
-            }
-        }
-#nullable enable
-
         private void CustomerGrid_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
         {
             if (customerGrid.Columns.Contains("CustomerNumber"))
@@ -390,20 +369,6 @@ namespace Book_Management
         }
 
 #nullable disable
-        private void AddressGrid_CellValueChanged(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex >= 0)
-            {
-                Address address = (Address)addressGrid.Rows[e.RowIndex].DataBoundItem;
-                SaveCustomers();
-
-                if (customerGrid.SelectedRows.Count > 0)
-                {
-                    int customerNumber = Convert.ToInt32(customerGrid.SelectedRows[0].Cells["CustomerNumber"].Value);
-                    LoadAddresses(customerNumber);
-                }
-            }
-        }
 
         private void AddressGrid_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
         {
@@ -417,18 +382,13 @@ namespace Book_Management
         private void AddressGrid_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
             DataGridViewColumn column = addressGrid.Columns[e.ColumnIndex];
-            if (column.Name == "AddressType")
-            {
-                SortAddressesByAddressType();
-            }
-            else
-            {
-                SortAddresses(column.Name);
-            }
+            SortAddresses(column.Name);
         }
 
 #nullable disable
-        private void SortAddressesByAddressType()
+        private Dictionary<string, ListSortDirection> addressSortOrders = new Dictionary<string, ListSortDirection>();
+
+        private void SortAddresses(string columnName)
         {
             if (customerGrid.SelectedRows.Count > 0)
             {
@@ -437,104 +397,105 @@ namespace Book_Management
 
                 if (selectedCustomer != null)
                 {
-                    if (!addressSortOrders.ContainsKey("AddressType"))
+                    if (!addressSortOrders.ContainsKey(columnName))
                     {
-                        addressSortOrders["AddressType"] = ListSortDirection.Ascending;
+                        addressSortOrders[columnName] = ListSortDirection.Ascending;
                     }
                     else
                     {
-                        addressSortOrders["AddressType"] = addressSortOrders["AddressType"] == ListSortDirection.Ascending ? ListSortDirection.Descending : ListSortDirection.Ascending;
+                        addressSortOrders[columnName] = addressSortOrders[columnName] == ListSortDirection.Ascending ? ListSortDirection.Descending : ListSortDirection.Ascending;
                     }
 
-                    ListSortDirection sortDirection = addressSortOrders["AddressType"];
+                    ListSortDirection sortDirection = addressSortOrders[columnName];
 
-                    if (sortDirection == ListSortDirection.Ascending)
+                    Func<Address, object> keySelector = null;
+
+                    switch (columnName)
                     {
-                        selectedCustomer.Addresses = new SortableBindingList<Address>(selectedCustomer.Addresses.OrderBy(a => a.AddressType).ToList());
+                        case "AddressId":
+                            keySelector = a => a.AddressId;
+                            break;
+                        case "AddressType":
+                            keySelector = a => a.AddressType;
+                            break;
+                        case "AddressLine1":
+                            keySelector = a => a.AddressLine1;
+                            break;
+                        case "AddressLine2":
+                            keySelector = a => a.AddressLine2;
+                            break;
+                        case "City":
+                            keySelector = a => a.City;
+                            break;
+                        case "State":
+                            keySelector = a => a.State;
+                            break;
+                        case "ZIP":
+                            keySelector = a => a.ZIP;
+                            break;
+                        case "Country":
+                            keySelector = a => a.Country;
+                            break;
                     }
-                    else
+
+                    if (keySelector != null)
                     {
-                        selectedCustomer.Addresses = new SortableBindingList<Address>(selectedCustomer.Addresses.OrderByDescending(a => a.AddressType).ToList());
-                    }
+                        bool allValuesNull = selectedCustomer.Addresses.All(a => keySelector(a) == null || string.IsNullOrEmpty(keySelector(a).ToString()));
 
-                    addressGrid.DataSource = null;
-                    addressGrid.DataSource = selectedCustomer.Addresses;
-                }
-            }
-        }
+                        if (allValuesNull)
+                        {
+                            MessageBox.Show("Cannot sort when all values are null or empty.", "Sorting Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        }
+                        else
+                        {
+                            if (sortDirection == ListSortDirection.Ascending)
+                            {
+                                selectedCustomer.Addresses = new SortableBindingList<Address>(selectedCustomer.Addresses.OrderBy(keySelector).ToList());
+                            }
+                            else
+                            {
+                                selectedCustomer.Addresses = new SortableBindingList<Address>(selectedCustomer.Addresses.OrderByDescending(keySelector).ToList());
+                            }
 
-        private Dictionary<string, ListSortDirection> addressSortOrders = new Dictionary<string, ListSortDirection>();
-
-        private void SortAddresses(string columnName)
-        {
-            if (!addressSortOrders.ContainsKey(columnName))
-            {
-                addressSortOrders[columnName] = ListSortDirection.Ascending;
-            }
-            else
-            {
-                addressSortOrders[columnName] = addressSortOrders[columnName] == ListSortDirection.Ascending ? ListSortDirection.Descending : ListSortDirection.Ascending;
-            }
-
-            DataGridViewColumn column = addressGrid.Columns[columnName];
-            ListSortDirection sortDirection = addressSortOrders[columnName];
-        }
-
-        private void AddressGrid_RowValidating(object sender, DataGridViewCellCancelEventArgs e)
-        {
-            if (addressGrid.IsCurrentRowDirty && e.RowIndex >= 0 && !addressGrid.Rows[e.RowIndex].IsNewRow)
-            {
-                DataGridViewRow row = addressGrid.Rows[e.RowIndex];
-                DataGridViewCell addressTypeCell = row.Cells["AddressType"];
-                if (addressTypeCell.Value != null)
-                {
-                    string addressType = addressTypeCell.Value.ToString();
-                    var customer = (Customer)customerGrid.SelectedRows[0].DataBoundItem;
-                    if (customer.Addresses.Count(a => a.AddressType == addressType) > 1)
-                    {
-                        e.Cancel = true;
-                        MessageBox.Show($"A customer can only have one address of type '{addressType}'.");
+                            addressGrid.DataSource = null;
+                            addressGrid.DataSource = selectedCustomer.Addresses;
+                        }
                     }
                 }
             }
         }
 #nullable enable
 
-        private void AddressGrid_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
-        {
-            if (e.ColumnIndex == addressGrid.Columns["AddressType"].Index)
-            {
-                Customer customer = (Customer)customerGrid.SelectedRows[0].DataBoundItem;
-                DataGridViewComboBoxCell comboBoxCell = (DataGridViewComboBoxCell)addressGrid.Rows[e.RowIndex].Cells["AddressType"];
-                Address currentAddress = (Address)addressGrid.Rows[e.RowIndex].DataBoundItem;
-
-                List<string> availableAddressTypes = new List<string> { "Home", "Business", "Billing", "Shipping" };
-                List<string> takenAddressTypes = customer.Addresses
-                    .Where(a => a != currentAddress)
-                    .Select(a => a.AddressType)
-                    .ToList();
-
-                string currentAddressType = currentAddress.AddressType;
-                if (!availableAddressTypes.Contains(currentAddressType))
-                {
-                    availableAddressTypes.Add(currentAddressType);
-                }
-
-                comboBoxCell.DataSource = availableAddressTypes.Except(takenAddressTypes).ToList();
-
-                if (!comboBoxCell.Items.Contains(currentAddressType))
-                {
-                    comboBoxCell.Items.Add(currentAddressType);
-                }
-
-                comboBoxCell.Value = currentAddressType;
-            }
-        }
-
         private void AddCustomerButton_Click(object sender, EventArgs e)
         {
             AddCustomer();
         }
+
+#nullable disable
+        private void EditCustomerButton_Click(object sender, EventArgs e)
+        {
+            if (customerGrid.SelectedRows.Count > 0)
+            {
+                int customerNumber = Convert.ToInt32(customerGrid.SelectedRows[0].Cells["CustomerNumber"].Value);
+                Customer selectedCustomer = customers.FirstOrDefault(c => c.CustomerNumber == customerNumber);
+                if (selectedCustomer != null)
+                {
+                    EditCustomerForm editCustomerForm = new EditCustomerForm(selectedCustomer);
+                    if (editCustomerForm.ShowDialog() == DialogResult.OK)
+                    {
+                        selectedCustomer.FirstName = editCustomerForm.FirstName;
+                        selectedCustomer.LastName = editCustomerForm.LastName;
+                        SaveCustomers();
+                        LoadCustomers();
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("Please select a customer to edit.");
+            }
+        }
+#nullable enable
 
         private void DeleteCustomerButton_Click(object sender, EventArgs e)
         {
@@ -561,6 +522,43 @@ namespace Book_Management
                 MessageBox.Show("Please select a customer to add an address for.");
             }
         }
+
+#nullable disable
+        private void EditAddressButton_Click(object sender, EventArgs e)
+        {
+            if (customerGrid.SelectedRows.Count > 0 && addressGrid.SelectedRows.Count > 0)
+            {
+                int customerNumber = Convert.ToInt32(customerGrid.SelectedRows[0].Cells["CustomerNumber"].Value);
+                Address selectedAddress = (Address)addressGrid.SelectedRows[0].DataBoundItem;
+                if (selectedAddress != null)
+                {
+                    Customer selectedCustomer = customers.FirstOrDefault(c => c.CustomerNumber == customerNumber);
+                    List<string> existingAddressTypes = selectedCustomer.Addresses
+                        .Where(a => a.AddressId != selectedAddress.AddressId)
+                        .Select(a => a.AddressType)
+                        .ToList();
+
+                    EditAddressForm editAddressForm = new EditAddressForm(selectedAddress, existingAddressTypes);
+                    if (editAddressForm.ShowDialog() == DialogResult.OK)
+                    {
+                        selectedAddress.AddressType = editAddressForm.AddressType;
+                        selectedAddress.AddressLine1 = editAddressForm.AddressLine1;
+                        selectedAddress.AddressLine2 = editAddressForm.AddressLine2;
+                        selectedAddress.City = editAddressForm.City;
+                        selectedAddress.State = editAddressForm.State;
+                        selectedAddress.ZIP = editAddressForm.ZIP;
+                        selectedAddress.Country = editAddressForm.Country;
+                        SaveCustomers();
+                        LoadAddresses(customerNumber);
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("Please select a customer and an address to edit.");
+            }
+        }
+#nullable enable
 
         private void DeleteAddressButton_Click(object sender, EventArgs e)
         {
@@ -647,41 +645,3 @@ namespace Book_Management
 #nullable enable
     }
 }
-
-
-// [
-//   {
-//     "CustomerNumber": 1,
-//     "FirstName": "John",
-//     "LastName": "Doe",
-//     "Addresses": [
-//       {
-//         "AddressId": 1,
-//         "AddressType": "Home",
-//         "AddressLine1": "123 Main St",
-//         "AddressLine2": "",
-//         "City": "New York",
-//         "State": "NY",
-//         "ZIP": "10001",
-//         "Country": "USA"
-//       }
-//     ]
-//   },
-//   {
-//     "CustomerNumber": 2,
-//     "FirstName": "Jill",
-//     "LastName": "Doe",
-//     "Addresses": [
-//       {
-//         "AddressId": 1,
-//         "AddressType": "Home",
-//         "AddressLine1": "124 Main St",
-//         "AddressLine2": "",
-//         "City": "New York",
-//         "State": "NY",
-//         "ZIP": "10001",
-//         "Country": "USA"
-//       }
-//     ]
-//   }
-// ]
