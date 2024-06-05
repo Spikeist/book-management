@@ -13,6 +13,16 @@
         "State": "NY",
         "ZIP": "10001",
         "Country": "USA"
+      },
+      {
+        "AddressId": 2,
+        "AddressType": "Shipping",
+        "AddressLine1": "",
+        "AddressLine2": "",
+        "City": "",
+        "State": null,
+        "ZIP": "",
+        "Country": ""
       }
     ]
   },

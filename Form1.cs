@@ -107,6 +107,8 @@ namespace Book_Management
             addressGrid.ColumnHeaderMouseClick += AddressGrid_ColumnHeaderMouseClick;
             addressGrid.RowValidating += AddressGrid_RowValidating;
             addressGrid.CellBeginEdit += AddressGrid_CellBeginEdit;
+            addressGrid.CellEndEdit += AddressGrid_CellEndEdit;
+            addressGrid.CurrentCellDirtyStateChanged += AddressGrid_CurrentCellDirtyStateChanged;
 
             this.Controls.Add(addressGrid);
 
@@ -138,6 +140,19 @@ namespace Book_Management
             deleteAddressButton.Size = new System.Drawing.Size(120, 30);
             deleteAddressButton.Click += DeleteAddressButton_Click;
             this.Controls.Add(deleteAddressButton);
+        }
+
+        private void AddressGrid_CurrentCellDirtyStateChanged(object sender, EventArgs e)
+        {
+            if (addressGrid.IsCurrentCellDirty)
+            {
+                addressGrid.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            }
+        }
+
+        private void AddressGrid_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            SaveCustomers();
         }
 #nullable enable
 
@@ -208,6 +223,10 @@ namespace Book_Management
                 customers.Remove(selectedCustomer);
                 SaveCustomers();
                 LoadCustomers();
+
+                if (customers.Count == 0)
+                {
+                }
             }
         }
 #nullable enable
@@ -369,16 +388,22 @@ namespace Book_Management
             }
         }
 
+#nullable disable
         private void AddressGrid_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0)
             {
                 Address address = (Address)addressGrid.Rows[e.RowIndex].DataBoundItem;
                 SaveCustomers();
+
+                if (customerGrid.SelectedRows.Count > 0)
+                {
+                    int customerNumber = Convert.ToInt32(customerGrid.SelectedRows[0].Cells["CustomerNumber"].Value);
+                    LoadAddresses(customerNumber);
+                }
             }
         }
 
-#nullable disable
         private void AddressGrid_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
         {
             Address address = (Address)e.Row.DataBoundItem;
@@ -396,6 +421,7 @@ namespace Book_Management
 
         private Dictionary<string, ListSortDirection> addressSortOrders = new Dictionary<string, ListSortDirection>();
 
+#nullable disable
         private void SortAddresses(string columnName)
         {
             if (!addressSortOrders.ContainsKey(columnName))
@@ -407,10 +433,10 @@ namespace Book_Management
                 addressSortOrders[columnName] = addressSortOrders[columnName] == ListSortDirection.Ascending ? ListSortDirection.Descending : ListSortDirection.Ascending;
             }
 
-            addressGrid.Sort(addressGrid.Columns[columnName], addressSortOrders[columnName]);
+            DataGridViewColumn column = addressGrid.Columns[columnName];
+            ListSortDirection sortDirection = addressSortOrders[columnName];
         }
 
-#nullable disable
         private void AddressGrid_RowValidating(object sender, DataGridViewCellCancelEventArgs e)
         {
             if (addressGrid.IsCurrentRowDirty && e.RowIndex >= 0 && !addressGrid.Rows[e.RowIndex].IsNewRow)
@@ -430,6 +456,7 @@ namespace Book_Management
             }
         }
 #nullable enable
+
         private void AddressGrid_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
         {
             if (e.ColumnIndex == addressGrid.Columns["AddressType"].Index)
@@ -577,3 +604,41 @@ namespace Book_Management
 #nullable enable
     }
 }
+
+
+// [
+//   {
+//     "CustomerNumber": 1,
+//     "FirstName": "John",
+//     "LastName": "Doe",
+//     "Addresses": [
+//       {
+//         "AddressId": 1,
+//         "AddressType": "Home",
+//         "AddressLine1": "123 Main St",
+//         "AddressLine2": "",
+//         "City": "New York",
+//         "State": "NY",
+//         "ZIP": "10001",
+//         "Country": "USA"
+//       }
+//     ]
+//   },
+//   {
+//     "CustomerNumber": 2,
+//     "FirstName": "Jill",
+//     "LastName": "Doe",
+//     "Addresses": [
+//       {
+//         "AddressId": 1,
+//         "AddressType": "Home",
+//         "AddressLine1": "124 Main St",
+//         "AddressLine2": "",
+//         "City": "New York",
+//         "State": "NY",
+//         "ZIP": "10001",
+//         "Country": "USA"
+//       }
+//     ]
+//   }
+// ]
