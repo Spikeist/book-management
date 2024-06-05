@@ -8,7 +8,7 @@
         "AddressId": 1,
         "AddressType": "Home",
         "AddressLine1": "123 Main St",
-        "AddressLine2": "",
+        "AddressLine2": null,
         "City": "New York",
         "State": "NY",
         "ZIP": "10001",
@@ -16,7 +16,7 @@
       },
       {
         "AddressId": 2,
-        "AddressType": "Shipping",
+        "AddressType": "Billing",
         "AddressLine1": "",
         "AddressLine2": "",
         "City": "",
